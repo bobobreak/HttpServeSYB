@@ -16,11 +16,9 @@ class ConfigManager : public QObject
 public:
     enum ConfigFormat {
         FormatIni,      // INI格式
-        FormatJson,     // JSON格式
-        FormatXml,      // XML格式
-        FormatRegistry  // Windows注册表 (仅Windows)
     };
-
+    //单例销毁
+    static void destroyInstance();
     // 单例模式获取实例
     static ConfigManager* instance();
 
@@ -43,38 +41,16 @@ public:
 
     // 文件操作
     bool save();
-    bool reload();
+    bool reload();//清空缓存
+    //备份配置文件
     bool backup(const QString& backupPath = QString()) const;
+    //备份当前配置，删除当前配置，用历史备份还原为当前配置
     bool restore(const QString& backupPath);
 
     // 工具函数
     QString getConfigPath() const;
-    ConfigFormat getFormat() const;
     bool isInitialized() const;
     QString getErrorString() const;
-
-    // 类型安全的读取方法
-    template<typename T>
-    T getValueAs(const QString& key, const T& defaultValue = T()) const;
-
-    QString getString(const QString& key, const QString& defaultValue = "") const;
-    int getInt(const QString& key, int defaultValue = 0) const;
-    double getDouble(const QString& key, double defaultValue = 0.0) const;
-    bool getBool(const QString& key, bool defaultValue = false) const;
-    QStringList getStringList(const QString& key,
-        const QStringList& defaultValue = QStringList()) const;
-
-    // 带验证的读取
-    int getIntInRange(const QString& key, int min, int max, int defaultValue) const;
-    double getDoubleInRange(const QString& key, double min, double max,
-        double defaultValue) const;
-
-    // 监听变化信号
-signals:
-    void configChanged(const QString& key, const QVariant& value);
-    void configReloaded();
-    void configSaved();
-    void errorOccurred(const QString& error);
 
 protected:
     explicit ConfigManager(QObject* parent = nullptr);
@@ -84,13 +60,6 @@ protected:
     virtual bool readConfig();
     virtual bool writeConfig();
 
-    // 不同格式的解析
-    bool readIni();
-    bool writeIni();
-    bool readJson();
-    bool writeJson();
-    bool readXml();
-    bool writeXml();
 
 private:
     // 单例实例
@@ -99,7 +68,6 @@ private:
 
     // 配置数据
     std::unique_ptr<QSettings> m_settings;
-    QJsonObject m_jsonData;
     QString m_configPath;
     ConfigFormat m_format;
     bool m_initialized;
@@ -113,19 +81,7 @@ private:
     QString getDefaultConfigPath() const;
     QString getBackupFileName() const;
     bool ensureConfigDirectory() const;
-    QVariant convertJsonValue(const QJsonValue& jsonValue) const;
-    QJsonValue convertToJsonValue(const QVariant& variant) const;
 };
 
-// 模板实现
-template<typename T>
-T ConfigManager::getValueAs(const QString& key, const T& defaultValue) const
-{
-    QVariant value = getValue(key, QVariant::fromValue(defaultValue));
-    if (value.canConvert<T>()) {
-        return value.value<T>();
-    }
-    return defaultValue;
-}
 
 

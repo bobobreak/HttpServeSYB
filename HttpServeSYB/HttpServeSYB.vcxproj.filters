@@ -38,9 +38,6 @@
     <ClCompile Include="src\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ConfigManager.cpp">
-      <Filter>ConfigManager</Filter>
-    </ClCompile>
     <ClCompile Include="logger\Logger.cpp">
       <Filter>logger</Filter>
     </ClCompile>
@@ -62,6 +59,9 @@
     <ClCompile Include="session\Session.cpp">
       <Filter>session</Filter>
     </ClCompile>
+    <ClCompile Include="ConfigManager\ConfigManager.cpp">
+      <Filter>ConfigManager</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="logger\Logger.h">
@@ -78,9 +78,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <QtMoc Include="ConfigManager.h">
-      <Filter>ConfigManager</Filter>
-    </QtMoc>
     <QtMoc Include="manage\AbstractManage.h">
       <Filter>manage</Filter>
     </QtMoc>
@@ -98,6 +95,9 @@
     </QtMoc>
     <QtMoc Include="session\Session.h">
       <Filter>session</Filter>
+    </QtMoc>
+    <QtMoc Include="ConfigManager\ConfigManager.h">
+      <Filter>ConfigManager</Filter>
     </QtMoc>
   </ItemGroup>
 </Project>

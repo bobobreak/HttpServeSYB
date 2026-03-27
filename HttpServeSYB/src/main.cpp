@@ -1,15 +1,49 @@
 ﻿
 #include "public.h"
+#include "ConfigManager\ConfigManager.h"
 #include "logger\Logger.h"
+#include <windows.h>
+
+BOOL WINAPI consoleCtrlHandler(DWORD dwCtrlType)
+{
+	if (dwCtrlType == CTRL_CLOSE_EVENT) {
+		// 当用户点击控制台窗口的“X”时，优雅地退出 Qt 应用
+		QCoreApplication::quit();
+		// 给应用程序一点时间来处理退出流程
+		Sleep(100); // 短暂等待，让 quit() 生效
+		return TRUE; // 表示我们已经处理了这个事件
+	}
+	return FALSE; // 让系统处理其他控制事件
+}
 
 int main(int argc, char* argv[])
 {
 	QCoreApplication app(argc, argv);
-	Logger::log(LogLevel::Info, "111");
-	qDebug() << "hello world";
 
-	system("pause");
-	return 0;
+	// 设置控制台控制处理器，捕获关闭事件
+	SetConsoleCtrlHandler(consoleCtrlHandler, TRUE);
+
+	//配置文件初始化
+	ConfigManager::instance()->initialize(QCoreApplication::applicationDirPath() + "/config/config.ini");
+	//ConfigManager::instance()->beginGroup("serverCfg");
+	//QVariantMap returlt = ConfigManager::instance()->getAllValues();
+	//ConfigManager::instance()->endGroup();
+
+	//for (auto it = returlt.begin(); it != returlt.end(); it ++)
+	//{
+	//	qDebug() <<"key:" << it.key() << " value:" << it.value();
+	//}
+
+	//日志初始化
+	Logger::init();
+
+
+	//释放配置信息
+	QObject::connect(&app, &QCoreApplication::aboutToQuit, [&]() {
+		ConfigManager::destroyInstance();
+		});
+	int status = app.exec();
+	return status;
 }
 
 

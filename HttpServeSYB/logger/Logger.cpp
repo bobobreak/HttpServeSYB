@@ -11,6 +11,81 @@ void Logger::setLogLevel(LogLevel level)
     logLevel_ = level;
 }
 
+void Logger::init()
+{
+    auto funcDeleteTargetDir = [](QDir& targetDir, int number) -> QString
+        {
+            QFileInfoList fileinfoList = targetDir.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot);
+            QString targetAbsoluteFilePath;
+            for (auto& it : fileinfoList)
+            {
+                //若存在小于number的目录，则直接删除
+                bool isOk;
+                int tempYear = it.fileName().toInt(&isOk);
+                if (isOk && tempYear < number)
+                {
+                    //删除目录及子目录文件removeRecursively
+                    QDir(it.absoluteFilePath()).removeRecursively();
+                }
+                else if (tempYear == number)
+                {
+                    targetAbsoluteFilePath = it.absoluteFilePath();
+                    targetDir.setPath(targetAbsoluteFilePath);
+                }
+            }
+            return targetAbsoluteFilePath;
+        };
+    //获取当前年月日
+    QStringList dateList = QDate::currentDate().toString("yyyy:M:d").split(":");
+    //删除12个月之前的日志文件及目录
+    QDir logDir(QCoreApplication::applicationDirPath() + "/logger/");
+    if (!logDir.exists())
+    {
+        logDir.mkdir(".");
+        logDir.mkdir("./" + dateList.at(0));
+        logDir.mkdir("./" + dateList.at(0) + "/" + dateList.at(1));
+        return;
+    }
+    else
+    {
+        //找到需要删除的年和月
+        int year = dateList.at(0).toInt() - 1;
+        int moth = dateList.at(1).toInt();
+        int day = dateList.at(2).toInt();
+        //删除指定year前的目录，进入year目录
+        if (!funcDeleteTargetDir(logDir, year).isEmpty())
+        {
+            //删除指定moth前的目录，进入moth目录
+            if (!funcDeleteTargetDir(logDir, moth).isEmpty())
+            {
+                //删除指定日期之前的文件
+                QFileInfoList fileinfoList = logDir.entryInfoList(QDir::Files | QDir::NoDotAndDotDot);
+                for (auto& it : fileinfoList)
+                {
+                    //若存在day前的文件，则直接删除
+                    bool isOk;
+                    int tempDay = it.fileName().section('_',0, 0).toInt(&isOk);
+                    if (isOk && tempDay <= day)
+                    {
+                        //删除目录及子目录文件removeRecursively
+                        QFile::remove(it.absoluteFilePath());
+                    }
+                }
+            }
+        }
+        
+        //创建当月目录文件
+        logDir.setPath(QCoreApplication::applicationDirPath() + "/logger/" + QString::number(year + 1) + "/" + QString::number(moth) + "/");
+        if (!logDir.exists())
+        {
+            logDir.mkpath(".");
+        }
+
+
+    }
+    
+}
+
 //打印日志
 void Logger::log(LogLevel level, const QString& message, const QObject* session)
 {
@@ -35,7 +110,7 @@ void Logger::log(LogLevel level, const QString& message, const QObject* session)
     QDir lggerDir(QCoreApplication::applicationDirPath() + "/logger/");
     if (!lggerDir.exists())
     {
-        lggerDir.mkdir(lggerDir.absolutePath());
+        lggerDir.mkdir(".");
     }
     //这里可以扩展到日志打印在文件中
     switch (level) {
